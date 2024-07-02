@@ -246,11 +246,13 @@ pub unsafe extern "C" fn client_on_sync_model_update(
 pub unsafe extern "C" fn client_on_entity_state_update(
     client: *mut ToriiClient,
     clause: Option<&EntityKeysClause>,
-    callback: unsafe extern "C" fn(types::FieldElement, CArray<Model>),
+    user_data: *mut c_void,
+    callback: unsafe extern "C" fn(types::FieldElement, CArray<Model>, *mut c_void)
 ) -> Result<*mut Subscription> {
     let clause = clause.map(|c| c.into());
 
     let entity_stream = unsafe { (*client).inner.on_entity_updated(clause) };
+    let void_ptr = user_data as i64;
     let rcv = match (*client).runtime.block_on(entity_stream) {
         Ok(rcv) => rcv,
         Err(e) => return Result::Err(e.into()),
@@ -263,7 +265,7 @@ pub unsafe extern "C" fn client_on_entity_state_update(
         while let Some(Ok(entity)) = rcv.next().await {
             let key: types::FieldElement = (&entity.hashed_keys).into();
             let models: Vec<Model> = entity.models.into_iter().map(|e| (&e).into()).collect();
-            callback(key, models.into());
+            callback(key, models.into(), void_ptr as *mut c_void); // Use raw pointer for callback
         }
     });
 
@@ -275,7 +277,8 @@ pub unsafe extern "C" fn client_on_entity_state_update(
 pub unsafe extern "C" fn client_on_event_message_update(
     client: *mut ToriiClient,
     clause: Option<&EntityKeysClause>,
-    callback: unsafe extern "C" fn(types::FieldElement, CArray<Model>),
+    user_data: *mut c_void,
+    callback: unsafe extern "C" fn(types::FieldElement, CArray<Model>, *mut c_void),
 ) -> Result<*mut Subscription> {
     let clause = clause.map(|c| c.into());
 
@@ -284,6 +287,7 @@ pub unsafe extern "C" fn client_on_event_message_update(
         Ok(rcv) => rcv,
         Err(e) => return Result::Err(e.into()),
     };
+    let void_ptr = user_data as i64;
 
     let (trigger, tripwire) = Tripwire::new();
     (*client).runtime.spawn(async move {
@@ -292,7 +296,7 @@ pub unsafe extern "C" fn client_on_event_message_update(
         while let Some(Ok(entity)) = rcv.next().await {
             let key: types::FieldElement = (&entity.hashed_keys).into();
             let models: Vec<Model> = entity.models.into_iter().map(|e| (&e).into()).collect();
-            callback(key, models.into());
+            callback(key, models.into(), void_ptr as *mut c_void);
         }
     });
 

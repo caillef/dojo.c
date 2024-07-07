@@ -873,11 +873,17 @@ Result<Subscription*> client_on_sync_model_update(ToriiClient *client,
 
 Result<Subscription*> client_on_entity_state_update(ToriiClient *client,
                                                     const EntityKeysClause *clause,
-                                                    void (*callback)(FieldElement, CArray<Model>));
+                                                    void *user_data,
+                                                    void (*callback)(FieldElement,
+                                                                     CArray<Model>,
+                                                                     void*));
 
 Result<Subscription*> client_on_event_message_update(ToriiClient *client,
                                                      const EntityKeysClause *clause,
-                                                     void (*callback)(FieldElement, CArray<Model>));
+                                                     void *user_data,
+                                                     void (*callback)(FieldElement,
+                                                                      CArray<Model>,
+                                                                      void*));
 
 Result<bool> client_remove_models_to_sync(ToriiClient *client,
                                           const ModelKeysClause *models,

@@ -665,13 +665,17 @@ struct ResultSubscription client_on_sync_model_update(struct ToriiClient *client
 
 struct ResultSubscription client_on_entity_state_update(struct ToriiClient *client,
                                                         const struct EntityKeysClause *clause,
+                                                        void *user_data,
                                                         void (*callback)(struct FieldElement,
-                                                                         struct CArrayModel));
+                                                                         struct CArrayModel,
+                                                                         void*));
 
 struct ResultSubscription client_on_event_message_update(struct ToriiClient *client,
                                                          const struct EntityKeysClause *clause,
+                                                         void *user_data,
                                                          void (*callback)(struct FieldElement,
-                                                                          struct CArrayModel));
+                                                                          struct CArrayModel,
+                                                                          void*));
 
 struct Resultbool client_remove_models_to_sync(struct ToriiClient *client,
                                                const struct ModelKeysClause *models,
